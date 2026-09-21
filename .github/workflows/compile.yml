@@ -1,0 +1,22 @@
+name: Compile Mac Wallpaper
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-13
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Compile Code
+      run: |
+        clang++ main.mm -framework Cocoa -framework WebKit -o HTMLWallpaper
+
+    - name: Upload Result
+      uses: actions/upload-artifact@v4
+      with:
+        name: Wallpaper-App
+        path: HTMLWallpaper
