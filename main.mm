@@ -6,25 +6,15 @@
 
 @implementation AppDelegate
 
-- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender {
-    return YES;
-}
-
 - (void)webView:(WKWebView *)webView
 didFinishNavigation:(WKNavigation *)navigation {
-    NSLog(@"MacWall: HTML berhasil dimuat.");
-}
-
-- (void)webView:(WKWebView *)webView
-didFailNavigation:(WKNavigation *)navigation
-      withError:(NSError *)error {
-    NSLog(@"MacWall: Gagal load HTML: %@", error);
+    NSLog(@"MacWall TEST: HTML berhasil dimuat.");
 }
 
 - (void)webView:(WKWebView *)webView
 didFailProvisionalNavigation:(WKNavigation *)navigation
       withError:(NSError *)error {
-    NSLog(@"MacWall: Gagal membuka HTML: %@", error);
+    NSLog(@"MacWall TEST: Gagal membuka HTML: %@", error);
 }
 
 @end
@@ -37,111 +27,87 @@ int main(int argc, const char * argv[]) {
         AppDelegate *delegate = [[AppDelegate alloc] init];
         [app setDelegate:delegate];
 
-        // ==============================
-        // SCREEN
-        // ==============================
-
+        // Screen
         NSScreen *screen = [NSScreen mainScreen];
         NSRect screenRect = [screen frame];
 
-        // ==============================
-        // WINDOW
-        // ==============================
+        // TEST WINDOW
+        // Sengaja BUKAN desktop-level dulu.
+        NSRect windowRect = NSMakeRect(
+            100,
+            100,
+            screenRect.size.width - 200,
+            screenRect.size.height - 200
+        );
 
         NSWindow *window =
             [[NSWindow alloc]
-                initWithContentRect:screenRect
-                styleMask:NSWindowStyleMaskBorderless
+                initWithContentRect:windowRect
+                styleMask:NSWindowStyleMaskTitled |
+                          NSWindowStyleMaskClosable |
+                          NSWindowStyleMaskResizable
                 backing:NSBackingStoreBuffered
                 defer:NO];
 
-        [window setLevel:kCGDesktopWindowLevel];
+        [window setTitle:@"MacWall WebKit Test"];
+        [window setHasShadow:YES];
 
-        [window setCollectionBehavior:
-            NSWindowCollectionBehaviorCanJoinAllSpaces |
-            NSWindowCollectionBehaviorStationary |
-            NSWindowCollectionBehaviorIgnoresCycle];
-
-        [window setIgnoresMouseEvents:YES];
-        [window setHasShadow:NO];
-
-        // ==============================
-        // WEBVIEW
-        // ==============================
-
+        // WebView
         WKWebViewConfiguration *config =
             [[WKWebViewConfiguration alloc] init];
 
         WKWebView *webView =
             [[WKWebView alloc]
-                initWithFrame:screenRect
+                initWithFrame:[[window contentView] bounds]
                 configuration:config];
+
+        [webView setAutoresizingMask:
+            NSViewWidthSizable | NSViewHeightSizable];
 
         webView.navigationDelegate = delegate;
 
-        [webView setValue:@(NO) forKey:@"drawsBackground"];
-
-        // ==============================
-        // HTML FILE
-        // ==============================
-
+        // HTML filename — HARUS sama persis
         NSString *htmlFileName =
             @"Bliss-Cat-4K-Wallpaper.html";
 
-        NSString *executableDirectory =
+        NSString *exeDirectory =
             [[[NSBundle mainBundle] executablePath]
                 stringByDeletingLastPathComponent];
 
         NSString *htmlPath =
-            [executableDirectory
+            [exeDirectory
                 stringByAppendingPathComponent:htmlFileName];
 
-        NSURL *htmlURL =
-            [NSURL fileURLWithPath:htmlPath];
-
-        // ==============================
-        // CHECK HTML
-        // ==============================
-
+        // Check file
         if (![[NSFileManager defaultManager]
                 fileExistsAtPath:htmlPath]) {
 
-            NSLog(@"========================================");
-            NSLog(@"MacWall ERROR");
-            NSLog(@"HTML FILE NOT FOUND!");
-            NSLog(@"Expected file:");
+            NSLog(@"MacWall TEST ERROR:");
+            NSLog(@"HTML tidak ditemukan:");
             NSLog(@"%@", htmlPath);
-            NSLog(@"========================================");
 
             return 1;
         }
 
-        NSLog(@"========================================");
-        NSLog(@"MacWall");
-        NSLog(@"HTML found:");
+        NSLog(@"MacWall TEST:");
+        NSLog(@"HTML ditemukan:");
         NSLog(@"%@", htmlPath);
-        NSLog(@"========================================");
 
-        // ==============================
-        // LOAD HTML
-        // ==============================
+        NSURL *htmlURL =
+            [NSURL fileURLWithPath:htmlPath];
 
+        // Load HTML
         [webView
             loadFileURL:htmlURL
             allowingReadAccessToURL:
                 [htmlURL URLByDeletingLastPathComponent]];
 
-        // ==============================
-        // DISPLAY
-        // ==============================
-
         [window setContentView:webView];
 
+        [window center];
         [window makeKeyAndOrderFront:nil];
 
-        // ==============================
-        // RUN
-        // ==============================
+        [app activateIgnoringOtherApps:YES];
 
         [app run];
     }
