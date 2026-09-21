@@ -5,18 +5,33 @@ on:
 
 jobs:
   build:
-    runs-on: macos-13
+    runs-on: macos-15-intel
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Compile Code
-      run: |
-        clang++ main.mm -framework Cocoa -framework WebKit -o HTMLWallpaper
+      - name: Compile Code
+        run: |
+          clang++ main.mm \
+            -framework Cocoa \
+            -framework WebKit \
+            -arch x86_64 \
+            -mmacosx-version-min=10.13 \
+            -o HTMLWallpaper
 
-    - name: Upload Result
-      uses: actions/upload-artifact@v4
-      with:
-        name: Wallpaper-App
-        path: HTMLWallpaper
+      - name: Prepare Wallpaper
+        run: |
+          mkdir -p Wallpaper-App
+          cp HTMLWallpaper Wallpaper-App/
+          cp Bliss-Cat-4K-Wallpaper.html Wallpaper-App/wallpaper.html
+
+      - name: Package App
+        run: |
+          zip -r Wallpaper-App.zip Wallpaper-App
+
+      - name: Upload Result
+        uses: actions/upload-artifact@v4
+        with:
+          name: Wallpaper-App
+          path: Wallpaper-App.zip
