@@ -11,7 +11,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Compile Code
+      - name: Compile
         run: |
           clang++ main.mm \
             -framework Cocoa \
@@ -24,13 +24,14 @@ jobs:
         run: |
           mkdir -p Wallpaper-App
           cp HTMLWallpaper Wallpaper-App/
-          cp Bliss-Cat-4K-Wallpaper.html Wallpaper-App/wallpaper.html
+          cp Bliss-Cat-4K-Wallpaper.html Wallpaper-App/
 
-      - name: Package App
+      - name: Package
         run: |
-          zip -r Wallpaper-App.zip Wallpaper-App
+          cd Wallpaper-App
+          zip -r ../Wallpaper-App.zip .
 
-      - name: Upload Result
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Wallpaper-App
