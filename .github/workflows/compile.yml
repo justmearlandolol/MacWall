@@ -26,6 +26,10 @@ jobs:
           cp HTMLWallpaper Wallpaper-App/
           cp Bliss-Cat-4K-Wallpaper.html Wallpaper-App/
 
+      - name: Verify Files
+        run: |
+          ls -lh Wallpaper-App
+
       - name: Package
         run: |
           cd Wallpaper-App
