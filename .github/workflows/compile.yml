@@ -1,42 +1,72 @@
-name: Compile Mac Wallpaper
+name: Build macOS App
 
 on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: write # dibutuhin step release buat bikin GitHub Release
 
 jobs:
   build:
-    runs-on: macos-15-intel
-
+    name: Build LiveHTMLWallpaper.app (universal)
+    runs-on: macos-15
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Compile
+      - name: Info toolchain
         run: |
-          clang++ main.mm \
-            -framework Cocoa \
-            -framework WebKit \
-            -arch x86_64 \
-            -mmacosx-version-min=10.13 \
-            -o HTMLWallpaper
+          xcodebuild -version
+          sw_vers
 
-      - name: Prepare Test App
+      - name: Build .app
+        run: ./build.sh
+
+      - name: Sanity check bundle
         run: |
-          mkdir -p Wallpaper-App
-          cp HTMLWallpaper Wallpaper-App/
-          cp Test.html Wallpaper-App/
+          ls -la build/LiveHTMLWallpaper.app/Contents/MacOS
+          lipo -info build/LiveHTMLWallpaper.app/Contents/MacOS/LiveHTMLWallpaper
+          otool -l build/LiveHTMLWallpaper.app/Contents/MacOS/LiveHTMLWallpaper \
+            | grep -A3 'LC_BUILD_VERSION' || true
 
-      - name: Verify Files
+      # Guard biar wallpaper yang masuk bundle BUKAN yang bakal rusak di 10.13:
+      # WebP nggak didukung WebKit 10.13, properti "inset:" nggak dikenal Safari 11,
+      # dan script pelacak nggak ada gunanya di wallpaper.
+      - name: Sanity check wallpaper HTML
         run: |
-          ls -lh Wallpaper-App
+          f="build/LiveHTMLWallpaper.app/Contents/Resources/wallpaper.html"
+          test -s "$f" || { echo "❌ wallpaper.html hilang / kosong di bundle"; exit 1; }
+          if grep -q "cloudflareinsights" "$f"; then
+            echo "❌ masih ada script pelacak Cloudflare di wallpaper"; exit 1
+          fi
+          if grep -qi "image/webp" "$f"; then
+            echo "❌ masih ada WebP — WebKit 10.13 (High Sierra) nggak bisa render"; exit 1
+          fi
+          if grep -q "inset:" "$f"; then
+            echo "❌ masih ada CSS inset: — Safari 11 nggak kenal, ganti top/left/right/bottom"; exit 1
+          fi
+          echo "✅ wallpaper.html aman buat macOS 10.13 ($(du -h "$f" | cut -f1))"
 
-      - name: Package
+      - name: Zip paket .app (ditto = metadata bundle + codesign ikut kejaga)
         run: |
-          cd Wallpaper-App
-          zip -r ../Wallpaper-App.zip .
+          cd build
+          NAME="LiveHTMLWallpaper-$(echo "${GITHUB_REF_NAME}" | sed -E 's/[^A-Za-z0-9._]+/-/g')"
+          ditto -c -k --sequesterRsrc --keepParent LiveHTMLWallpaper.app "${NAME}.zip"
 
-      - name: Upload Artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Wallpaper-App-Test
-          path: Wallpaper-App.zip
+          name: LiveHTMLWallpaper-app
+          path: build/*.zip
+          if-no-files-found: error
+
+      - name: Bikin GitHub Release (khusus push tag v*)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/*.zip
+          generate_release_notes: true
