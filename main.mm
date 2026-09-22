@@ -68,7 +68,7 @@ int main(int argc, const char * argv[]) {
 
         // HTML filename — HARUS sama persis
         NSString *htmlFileName =
-            @"Bliss-Cat-4K-Wallpaper.html";
+            @"Test.html";
 
         NSString *exeDirectory =
             [[[NSBundle mainBundle] executablePath]
