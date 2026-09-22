@@ -20,11 +20,11 @@ jobs:
             -mmacosx-version-min=10.13 \
             -o HTMLWallpaper
 
-      - name: Prepare Wallpaper
+      - name: Prepare Test App
         run: |
           mkdir -p Wallpaper-App
           cp HTMLWallpaper Wallpaper-App/
-          cp Bliss-Cat-4K-Wallpaper.html Wallpaper-App/
+          cp Test.html Wallpaper-App/
 
       - name: Verify Files
         run: |
@@ -38,5 +38,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Wallpaper-App
+          name: Wallpaper-App-Test
           path: Wallpaper-App.zip
