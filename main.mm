@@ -8,13 +8,13 @@
 
 - (void)webView:(WKWebView *)webView
 didFinishNavigation:(WKNavigation *)navigation {
-    NSLog(@"MacWall TEST: HTML berhasil dimuat.");
+    NSLog(@"MacWall TEST: Test.html berhasil dimuat.");
 }
 
 - (void)webView:(WKWebView *)webView
 didFailProvisionalNavigation:(WKNavigation *)navigation
       withError:(NSError *)error {
-    NSLog(@"MacWall TEST: Gagal membuka HTML: %@", error);
+    NSLog(@"MacWall TEST ERROR: %@", error);
 }
 
 @end
@@ -27,12 +27,9 @@ int main(int argc, const char * argv[]) {
         AppDelegate *delegate = [[AppDelegate alloc] init];
         [app setDelegate:delegate];
 
-        // Screen
         NSScreen *screen = [NSScreen mainScreen];
         NSRect screenRect = [screen frame];
 
-        // TEST WINDOW
-        // Sengaja BUKAN desktop-level dulu.
         NSRect windowRect = NSMakeRect(
             100,
             100,
@@ -49,10 +46,8 @@ int main(int argc, const char * argv[]) {
                 backing:NSBackingStoreBuffered
                 defer:NO];
 
-        [window setTitle:@"MacWall WebKit Test"];
-        [window setHasShadow:YES];
+        [window setTitle:@"MacWall Test"];
 
-        // WebView
         WKWebViewConfiguration *config =
             [[WKWebViewConfiguration alloc] init];
 
@@ -66,9 +61,7 @@ int main(int argc, const char * argv[]) {
 
         webView.navigationDelegate = delegate;
 
-        // HTML filename — HARUS sama persis
-        NSString *htmlFileName =
-            @"Test.html";
+        NSString *htmlFileName = @"Test.html";
 
         NSString *exeDirectory =
             [[[NSBundle mainBundle] executablePath]
@@ -78,25 +71,23 @@ int main(int argc, const char * argv[]) {
             [exeDirectory
                 stringByAppendingPathComponent:htmlFileName];
 
-        // Check file
         if (![[NSFileManager defaultManager]
                 fileExistsAtPath:htmlPath]) {
 
             NSLog(@"MacWall TEST ERROR:");
-            NSLog(@"HTML tidak ditemukan:");
+            NSLog(@"Test.html tidak ditemukan:");
             NSLog(@"%@", htmlPath);
 
             return 1;
         }
 
         NSLog(@"MacWall TEST:");
-        NSLog(@"HTML ditemukan:");
+        NSLog(@"Test.html ditemukan:");
         NSLog(@"%@", htmlPath);
 
         NSURL *htmlURL =
             [NSURL fileURLWithPath:htmlPath];
 
-        // Load HTML
         [webView
             loadFileURL:htmlURL
             allowingReadAccessToURL:
